@@ -6,7 +6,10 @@ class NumeroInvalidoDeSwitches(Exception):
 
 class Topologia(Topo):
 
-    def build(self, n_switches=2):
+    def __init__(self, n_switches=2):
+
+        #Inicializa la topologia
+        Topo.__init__(self)
 
         if n_switches < 1:
             raise NumeroInvalidoDeSwitches("El numero de switches debe ser mayor a 0")
