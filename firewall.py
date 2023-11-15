@@ -1,10 +1,10 @@
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
-from pox.lib.revent.revent import EventMixin
+from pox.lib.revent.revent import *
 from pox.lib.util import dpidToStr
 from pox.lib.packet.ethernet import ethernet
 from pox.lib.packet.ipv4 import ipv4
-from pox.lib.addresses import EthAddr
+from pox.lib.addresses import EthAddr, IPAddr
 import json
 
 ERROR = -1
@@ -33,6 +33,9 @@ class Firewall(EventMixin):
         self.listenTo(core.openflow)
         log.debug("Habilitando el Firewall")
 
+    def _handle_PacketIn(self, evento):
+        pass   
+
     def _handle_ConnectionUp(self, evento):
         if evento.dpid == firewall_switch_id:
             for regla in reglas["reglas"]:
@@ -48,14 +51,15 @@ class Firewall(EventMixin):
     def aplicar_regla(self, mensaje, regla):
 
         mensaje.match.dl_type = ethernet.IP_TYPE
-
+        print(regla)
         for clave, valor in regla.items():
+            
             if clave == "src_ip":
                 log.debug("Regla instalada: droppeando paquete proveniente de dirección IP %s", valor)
-                mensaje.match.nw_src = valor
+                mensaje.match.nw_src = IPAddr(valor)
             elif clave == "dst_ip":
                 log.debug("Regla instalada: droppeando paquete con dirección IP destino %s", valor)
-                mensaje.match.nw_dst = valor
+                mensaje.match.nw_dst = IPAddr(valor)
             elif clave == "src_port":
                 log.debug("Regla instalada: droppeando paquete proveniente de puerto %i", valor)
                 mensaje.match.tp_src = valor

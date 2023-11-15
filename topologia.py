@@ -36,5 +36,4 @@ class Topologia(Topo):
         self.addLink(hosts[2], switches[-1])
         self.addLink(hosts[3], switches[-1])
 
-
 topos = {"topologia": Topologia}
