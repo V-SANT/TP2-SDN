@@ -9,7 +9,6 @@ import json
 
 ERROR = -1
 
-
 def guardar_reglas(path):
     try:
         with open(path) as archivo:
@@ -19,14 +18,9 @@ def guardar_reglas(path):
         log.error("Error al leer el archivo de reglas")
         exit(ERROR)
 
-
 log = core.getLogger()
-
-#Si no se especifica un switch para que actúe como Firewall, se usa como default el 1
 firewall_switch_id = 1
-
 reglas = {"reglas": []}
-
 
 class Firewall(EventMixin):
     def __init__(self):
@@ -51,7 +45,7 @@ class Firewall(EventMixin):
     def aplicar_regla(self, mensaje, regla):
 
         mensaje.match.dl_type = ethernet.IP_TYPE
-        print(regla)
+
         for clave, valor in regla.items():
             
             if clave == "src_ip":
