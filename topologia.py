@@ -13,11 +13,12 @@ class Topologia(Topo):
         if n_switches < 1:
             raise NumeroInvalidoDeSwitches("El numero de switches debe ser mayor a 0")
 
-        print("Inicializando la topología con %s switches" % (n_switches))
-        hosts = []
-
-        for i in range(1, 5):
-            hosts.append(self.addHost("host_%s" % i))
+        print(f"Inicializando la topología con {n_switches} switches")
+        
+        h1 = self.addHost('host_1')
+        h2 = self.addHost('host_2')
+        h3 = self.addHost('host_3')
+        h4 = self.addHost('host_4')
 
         switches = []
         for i in range(1, n_switches + 1):
@@ -26,9 +27,9 @@ class Topologia(Topo):
         for i in range(n_switches - 1):
             self.addLink(switches[i], switches[i + 1])
 
-        self.addLink(hosts[0], switches[0])
-        self.addLink(hosts[1], switches[0])
-        self.addLink(hosts[2], switches[-1])
-        self.addLink(hosts[3], switches[-1])
+        self.addLink(h1, switches[0])
+        self.addLink(h2, switches[0])
+        self.addLink(h3, switches[-1])
+        self.addLink(h4, switches[-1])
 
 topos = {"topologia": Topologia}
