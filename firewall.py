@@ -36,42 +36,50 @@ class Firewall(EventMixin):
                 mensaje = of.ofp_flow_mod()
                 self.aplicar_regla(mensaje, regla)
                 evento.connection.send(mensaje)
-            log.debug(
-                "Reglas de Firewall instaladas en %s - switch %i",
-                dpidToStr(evento.dpid),
-                firewall_switch_id,
-            )
+            log.debug(f"Reglas de Firewall instaladas en {dpidToStr(evento.dpid)} - switch {firewall_switch_id}")
+
+    def aplicar_regla_data_link(self, mensaje, clave, valor):
+        if clave == "src_mac":
+            log.debug(f"Regla instalada: droppeando paquete proveniente de dirección MAC {valor}")
+            mensaje.match.dl_src = EthAddr(valor)
+        elif clave == "dst_mac":
+            log.debug(f"Regla instalada: droppeando paquete con dirección MAC destino {valor}")
+            mensaje.match.dl_dst = EthAddr(valor)
+
+    def aplicar_regla_network(self, mensaje, clave, valor):
+        if clave == "src_ip":
+            log.debug(f"Regla instalada: droppeando paquete proveniente de dirección IP {valor}")
+            mensaje.match.nw_src = IPAddr(valor)
+        elif clave == "dst_ip":
+            log.debug(f"Regla instalada: droppeando paquete con dirección IP destino {valor}")
+            mensaje.match.nw_dst = IPAddr(valor)
+        elif clave == "src_port":
+            log.debug(f"Regla instalada: droppeando paquete proveniente de puerto {valor}")
+            mensaje.match.tp_src = valor
+        elif clave == "dst_port":
+            log.debug(f"Regla instalada: droppeando paquete con puerto de destino {valor}")
+            mensaje.match.tp_dst = valor
+
+    def aplicar_regla_transporte(self, mensaje, clave, valor):
+        if clave == "protocol" and valor == "tcp":
+            log.debug("Regla instalada: droppeando paquete TCP")
+            mensaje.match.nw_proto = ipv4.TCP_PROTOCOL
+        elif clave == "protocol" and valor == "udp":
+            log.debug("Regla instalada: droppeando paquete UDP")
+            mensaje.match.nw_proto = ipv4.UDP_PROTOCOL
 
     def aplicar_regla(self, mensaje, regla):
-
         mensaje.match.dl_type = ethernet.IP_TYPE
 
         for clave, valor in regla.items():
-            
-            if clave == "src_ip":
-                log.debug("Regla instalada: droppeando paquete proveniente de dirección IP %s", valor)
-                mensaje.match.nw_src = IPAddr(valor)
-            elif clave == "dst_ip":
-                log.debug("Regla instalada: droppeando paquete con dirección IP destino %s", valor)
-                mensaje.match.nw_dst = IPAddr(valor)
-            elif clave == "src_port":
-                log.debug("Regla instalada: droppeando paquete proveniente de puerto %i", valor)
-                mensaje.match.tp_src = valor
-            elif clave == "dst_port":
-                log.debug("Regla instalada: droppeando paquete con puerto de destino %i", valor)
-                mensaje.match.tp_dst = valor
-            elif clave == "src_mac":
-                log.debug("Regla instalada: droppeando paquete proveniente de dirección MAC %s", valor)
-                mensaje.match.dl_src = EthAddr(valor)
-            elif clave == "dst_mac":
-                log.debug("Regla instalada: droppeando paquete con dirección MAC destino %s", valor)
-                mensaje.match.dl_dst = EthAddr(valor)
-            elif clave == "protocol" and valor == "tcp":
-                log.debug("Regla instalada: droppeando paquete TCP")
-                mensaje.match.nw_proto = ipv4.TCP_PROTOCOL
-            elif clave == "protocol" and valor == "udp":
-                log.debug("Regla instalada: droppeando paquete UDP")
-                mensaje.match.nw_proto = ipv4.UDP_PROTOCOL
+            if clave in ["src_mac", "dst_mac"]:
+                self.aplicar_regla_data_link(mensaje, clave, valor)
+            elif clave in ["src_ip", "dst_ip", "src_port", "dst_port"]:
+                self.aplicar_regla_network(mensaje, clave, valor)
+            elif clave in ["protocol"]:
+                self.aplicar_regla_transporte(mensaje, clave, valor)
+
+
 
 
 def launch(path_reglas, switch_id=1):
@@ -82,6 +90,6 @@ def launch(path_reglas, switch_id=1):
     global reglas
     data = guardar_reglas(path_reglas)
     reglas = data
-    log.debug("Reglas cargadas:\n" + str(reglas))
+    log.debug("Reglas:\n" + str(reglas))
     firewall_switch_id = int(switch_id)
     core.registerNew(Firewall)
