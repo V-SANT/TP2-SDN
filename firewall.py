@@ -9,6 +9,11 @@ import json
 
 ERROR = -1
 
+class NumeroInvalidoDeSwitch(Exception):
+    pass
+class LecturaIncorrectaDeReglas(Exception):
+    pass
+
 def guardar_reglas(path):
     try:
         with open(path) as archivo:
@@ -16,7 +21,7 @@ def guardar_reglas(path):
         return reglas
     except Exception:
         log.error("Error al leer el archivo de reglas")
-        exit(ERROR)
+        raise LecturaIncorrectaDeReglas("Error al leer el archivo de reglas")
 
 log = core.getLogger()
 firewall_switch_id = 1
@@ -36,7 +41,7 @@ class Firewall(EventMixin):
                 mensaje = of.ofp_flow_mod()
                 self.aplicar_regla(mensaje, regla)
                 evento.connection.send(mensaje)
-            log.debug(f"Reglas de Firewall instaladas en {dpidToStr(evento.dpid)} - switch {firewall_switch_id}")
+            log.debug(f"Reglas de Firewall instaladas en {dpidToStr(evento.dpid)} switch {firewall_switch_id}")
 
     def aplicar_regla_data_link(self, mensaje, clave, valor):
         if clave == "src_mac":
@@ -83,13 +88,14 @@ class Firewall(EventMixin):
 
 
 def launch(path_reglas, switch_id=1):
-    if int(switch_id) < 1:
+    id_switch = int(switch_id)
+    if id_switch < 1:
         log.error("Switch ID invalido")
-        exit(ERROR)
+        raise NumeroInvalidoDeSwitch("El ID del switch debe ser mayor a 0")
     global firewall_switch_id
     global reglas
-    data = guardar_reglas(path_reglas)
-    reglas = data
+    reglas_a_aplicar = guardar_reglas(path_reglas)
+    reglas = reglas_a_aplicar
     log.debug("Reglas:\n" + str(reglas))
-    firewall_switch_id = int(switch_id)
+    firewall_switch_id = id_switch
     core.registerNew(Firewall)
