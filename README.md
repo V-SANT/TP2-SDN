@@ -18,6 +18,6 @@ Luego se lanza la topología
 
 ### Para lanzar la topología
 ```shell
-sudo mn --custom ./topologia.py --topo topologia --mac --arp --switch ovsk --controller remote
+sudo mn --custom ./topologia.py --topo topologia,n_switches=nro_de_switches --mac --arp --switch ovsk --controller remote
 ```
 
